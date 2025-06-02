@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("Entity not found")
+	ErrNotFound = errors.New("entity not found")
 )
 
 type Repository interface {
