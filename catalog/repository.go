@@ -13,7 +13,7 @@ var (
 )
 
 type Repository interface {
-	Close() error
+	Close()
 	PutProduct(ctx context.Context, p Product) error
 	GetProductByID(ctx context.Context, id string) (*Product, error)
 	ListProducts(ctx context.Context, skip uint64, take uint64) ([]Product, error)
@@ -45,7 +45,7 @@ func NewElasticRepository(url string) (Repository, error) {
 	}, nil
 }
 
-func (r *elasticRepository) Close() error {}
+func (r *elasticRepository) Close() {}
 
 func (r *elasticRepository) PutProduct(ctx context.Context, p Product) error {
 	_, err := r.client.Index().
