@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/pixperk/microservices_e-comm/account/pb/github.com/pixperk/microservices_e-comm/account/pb"
+	pb "github.com/pixperk/microservices_e-comm/account/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

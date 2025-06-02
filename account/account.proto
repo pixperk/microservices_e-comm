@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pb;
 
-option go_package = "github.com/pixperk/microservices_e-comm/account/pb";
+option go_package = "./";
 
 message Account{
   string id = 1;
