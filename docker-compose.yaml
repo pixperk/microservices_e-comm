@@ -1,9 +1,136 @@
-
 services:
   account:
+    build:
+      context: .
+      dockerfile: ./account/app.dockerfile
+    container_name: account_service
+    depends_on:
+      - account_db
+    environment:
+      DATABASE_URL: postgres://yashaswi:123456@account_db/yashaswi?sslmode=disable
+    ports:
+      - "8081:8080"
+    restart: on-failure
+    networks:
+      - backend_net
+
   catalog:
+    build:
+      context: .
+      dockerfile: ./catalog/app.dockerfile
+    container_name: catalog_service
+    depends_on:
+      - catalog_db
+    environment:
+      DATABASE_URL: http://catalog_db:9200
+    ports:
+      - "8082:8080"
+    restart: on-failure
+    networks:
+      - backend_net
+
   order:
+    build:
+      context: .
+      dockerfile: ./order/app.dockerfile
+    container_name: order_service
+    depends_on:
+      - order_db
+    environment:
+      DATABASE_URL: postgres://yashaswi:123456@order_db/yashaswi?sslmode=disable
+      ACCOUNT_SERVICE_URL: http://account:8080
+      CATALOG_SERVICE_URL: http://catalog:8080
+    ports:
+      - "8083:8080"
+    restart: on-failure
+    networks:
+      - backend_net
+
   graphql:
+    build:
+      context: .
+      dockerfile: ./graphql/app.dockerfile
+    container_name: graphql_gateway
+    depends_on:
+      - account
+      - catalog
+      - order
+    environment:
+      ACCOUNT_SERVICE_URL: http://account:8080
+      CATALOG_SERVICE_URL: http://catalog:8080
+      ORDER_SERVICE_URL: http://order:8080
+    ports:
+      - "8000:8080"
+    restart: on-failure
+    networks:
+      - backend_net
+
   account_db:
+    build:
+      context: ./account
+      dockerfile: ./db.dockerfile
+    container_name: account_db
+    environment:
+      POSTGRES_DB: yashaswi
+      POSTGRES_USER: yashaswi
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5433:5432"
+    volumes:
+      - account_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yashaswi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   catalog_db:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+    container_name: catalog_db
+    environment:
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      discovery.type: single-node
+      network.host: 0.0.0.0
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   order_db:
+    build:
+      context: ./order
+      dockerfile: ./db.dockerfile
+    container_name: order_db
+    environment:
+      POSTGRES_DB: yashaswi
+      POSTGRES_USER: yashaswi
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5435:5432"
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yashaswi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  account_db_data:
+  order_db_data:
+
+networks:
+  backend_net:
+    driver: bridge

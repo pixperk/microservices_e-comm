@@ -10,7 +10,7 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string `envconnfig:"DATABASE_URL"`
+	DatabaseURL string `envconfig:"DATABASE_URL"`
 }
 
 func main() {
@@ -18,14 +18,14 @@ func main() {
 	if err := envconfig.Process("", &cfg); err != nil {
 		log.Fatal(err)
 	}
-
 	var r account.Repository
 	retry.ForeverSleep(2*time.Second, func(_ int) (err error) {
 		r, err = account.NewPostgresRepository(cfg.DatabaseURL)
 		if err != nil {
 			log.Printf("Failed to connect to database: %v", err)
+			return err
 		}
-		return
+		return nil
 	})
 
 	defer r.Close()

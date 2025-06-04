@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	elastic "gopkg.in/olivere/elastic.v5"
 )
@@ -35,9 +36,24 @@ func NewElasticRepository(url string) (Repository, error) {
 	client, err := elastic.NewClient(
 		elastic.SetURL(url),
 		elastic.SetSniff(false),
+		elastic.SetHealthcheck(true),
+		elastic.SetHealthcheckTimeoutStartup(30*time.Second),
+		elastic.SetRetrier(elastic.NewBackoffRetrier(elastic.NewExponentialBackoff(100, 20000))),
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Create catalog index if it doesn't exist
+	exists, err := client.IndexExists("catalog").Do(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		_, err := client.CreateIndex("catalog").Do(context.Background())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &elasticRepository{

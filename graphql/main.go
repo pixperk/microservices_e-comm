@@ -6,6 +6,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/99designs/gqlgen/handler"
+	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -16,6 +17,7 @@ type AppConfig struct {
 }
 
 func main() {
+	_ = godotenv.Load(".env")
 	var cfg AppConfig
 	err := envconfig.Process("", &cfg)
 	if err != nil {

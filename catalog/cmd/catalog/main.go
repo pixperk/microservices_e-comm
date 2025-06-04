@@ -14,19 +14,23 @@ type Config struct {
 }
 
 func main() {
+
 	var cfg Config
+
 	err := envconfig.Process("", &cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var r catalog.Repository
+
 	retry.ForeverSleep(2*time.Second, func(_ int) (err error) {
 		r, err = catalog.NewElasticRepository(cfg.DatabaseURL)
 		if err != nil {
 			log.Printf("Failed to connect to database: %v", err)
+			return err
 		}
-		return
+		return nil
 	})
 
 	defer r.Close()

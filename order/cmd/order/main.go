@@ -18,25 +18,26 @@ type Config struct {
 }
 
 func main() {
+
 	var cfg Config
 	err := envconfig.Process("", &cfg)
 	if err != nil {
 		log.Fatalf("Failed to process environment variables: %v", err)
 	}
-
 	var r order.Repository
 	retry.ForeverSleep(2*time.Second, func(_ int) (err error) {
 		r, err = order.NewPostgresRepository(cfg.DatabaseURL)
 		if err != nil {
 			log.Printf("Failed to connect to database: %v", err)
+			return err
 		}
-		return
+		return nil
 	})
 	defer r.Close()
 
 	log.Println("Order service started on port 8080...")
 	s := order.NewService(r)
-	if err := order.ListenGRPC(s, cfg.AccountURL, cfg.CatalogURL, cfg.Port); err != nil {
+	if err := order.ListenGRPC(s, cfg.AccountURL, cfg.CatalogURL, 8080); err != nil {
 		log.Fatalf("Failed to start gRPC server: %v", err)
 	}
 
